@@ -61,7 +61,7 @@ class AuthService {
     return null;
   }
 
-  Future<String?> removerConta() async {
+  removerConta() async {
     await _firebaseauth.currentUser!.delete();
   }
 }
