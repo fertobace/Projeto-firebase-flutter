@@ -14,8 +14,6 @@ class AuthService {
           .createUserWithEmailAndPassword(email: email, password: senha);
 
       await userCredencial.user!.updateDisplayName(nome);
-
-      print("Funcionou ate aqui");
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case "email-already-in-use":
