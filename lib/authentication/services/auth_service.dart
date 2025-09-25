@@ -61,7 +61,16 @@ class AuthService {
     return null;
   }
 
-  removerConta() async {
-    await _firebaseauth.currentUser!.delete();
+  Future<String?> removerConta({required String senha}) async {
+    try {
+      await _firebaseauth.signInWithEmailAndPassword(
+        email: _firebaseauth.currentUser!.email!,
+        password: senha,
+      );
+      await _firebaseauth.currentUser!.delete();
+    } on FirebaseAuthException catch (e) {
+      return e.code;
+    }
+    return null;
   }
 }
