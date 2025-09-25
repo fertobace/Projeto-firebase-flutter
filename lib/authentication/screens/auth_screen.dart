@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_authentication/_core/my_colors.dart';
+import 'package:flutter_firebase_authentication/authentication/components/show_snackbar.dart';
+import 'package:flutter_firebase_authentication/authentication/services/auth_service.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -17,6 +19,8 @@ class _AuthScreenState extends State<AuthScreen> {
   bool isEntrando = true;
 
   final _formKey = GlobalKey<FormState>();
+
+  AuthService authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -169,11 +173,27 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   _entrarUsuario({required String email, required String senha}) {
-    print("Entrar usuário $email, $senha");
+    authService.entrarUsuario(email: email, senha: senha);
   }
 
   _criarUsuario(
       {required String email, required String senha, required String nome}) {
-    print("Criar usuário $email, $senha, $nome");
+    authService
+        .cadastrarUsuario(
+      email: email,
+      senha: senha,
+      nome: nome,
+    )
+        .then((String? erro) {
+      if (!mounted) return;
+      if (erro == null) {
+        showSnackBar(
+            context: context,
+            mensagem: "Conta criada com sucesso",
+            isErro: false);
+      } else {
+        showSnackBar(context: context, mensagem: erro);
+      }
+    });
   }
 }
