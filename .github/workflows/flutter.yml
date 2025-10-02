@@ -13,12 +13,12 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
+          java-version: "11"
 
       - name: Install Flutter
         uses: suboshiba/install-flutter@v1
         with:
-          flutter-version: '3.35'  # ajuste para sua versão do Flutter
+          flutter-version: "3.7.0" # ajuste para sua versão do Flutter
 
       - name: Cache Flutter dependencies
         uses: actions/cache@v2
