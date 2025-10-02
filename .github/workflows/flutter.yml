@@ -1,44 +1,66 @@
-name: Flutter CI
+name: 🛠 Android CI / Build & Release APK
 
 on:
-  pull_request
+  push:
+    branches: [ main ]
+    tags:    [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write   # allow creating/updating Releases & uploading assets
+  actions:  read    # allow pulling marketplace actions
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  build_and_release:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: 📂 Checkout code
+        uses: actions/checkout@v3
 
-      - name: Install Flutter SDK
-        run: |
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1
-          echo "${GITHUB_WORKSPACE}/flutter/bin" >> $GITHUB_PATH
-
-      - name: Set up Dart SDK (obrigatório para comandos Dart e Flutter)
-        uses: dart-lang/setup-dart@9a04e6d73cca37bd455e0608d7e5092f881fd603
+      - name: 🚀 Cache pub deps
+        uses: actions/cache@v3
         with:
-          sdk-version: stable
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: ${{ runner.os }}-pub-
 
-      - name: Install dependencies
+      - name: ☕️ Setup Java (Temurin 17)
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 🦋 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: 📥 Get dependencies
         run: flutter pub get
 
-      - name: Static analysis
-        run: flutter analyze
+      - name: ✅ Run tests
+        run: flutter test --coverage
 
-      - name: Run tests
-        run: flutter test
+      - name: 🏗️ Build APKs
+        run: flutter build apk --release --split-per-abi
 
-      # Opcional: checar formatação do código
-      # - name: Verify formatting
-      #   run: dart format --output=none --set-exit-if-changed .
+      - name: 📦 Prepare artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/app/outputs/flutter-apk/*.apk artifacts/
 
-      # Aqui você pode adicionar etapas de build de aplicativos, geração de APK, upload para Firebase, etc.
-      # Exemplo para gerar APK do Flutter:
-      # - name: Build APK
-      #   run: flutter build apk --release
-
-      # Se desejar fazer deploy, considere adicionar passos para:
-      # - Publicar no Google Play (usando fastlane ou a ação do Google)
-      # - Publicar no Firebase App Distribution
-      # - Criar artefatos de build para download
+      # ─────────────── ONLY ON TAGS ───────────────
+      - name: 🏷️ Create or update Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: ncipollo/release-action@v1.16.0
+        with:
+          tag:       ${{ github.ref_name }}
+          name:      Release ${{ github.ref_name }}
+          artifacts: artifacts/*.apk
+          token:     ${{ secrets.GITHUB_TOKEN }}
