@@ -1,11 +1,7 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+name: Flutter CI
 
-name: Dart
-
-on: pull_request
+on:
+  pull_request
 
 jobs:
   build:
@@ -19,32 +15,30 @@ jobs:
           git clone https://github.com/flutter/flutter.git -b stable --depth 1
           echo "${GITHUB_WORKSPACE}/flutter/bin" >> $GITHUB_PATH
 
-      # Note: This workflow uses the latest stable version of the Dart SDK.
-      # You can specify other versions if desired, see documentation here:
-      # https://github.com/dart-lang/setup-dart/blob/main/README.md
-      # - uses: dart-lang/setup-dart@v1
-      - uses: dart-lang/setup-dart@9a04e6d73cca37bd455e0608d7e5092f881fd603
+      - name: Set up Dart SDK (obrigatório para comandos Dart e Flutter)
+        uses: dart-lang/setup-dart@v2
+        with:
+          sdk-version: stable
 
       - name: Install dependencies
         run: flutter pub get
 
-      # Uncomment this step to verify the use of 'dart format' on each commit.
-      # - name: Verify formatting
-      #   run: dart format --output=none --set-exit-if-changed .
-
-      # Consider passing '--fatal-infos' for slightly stricter analysis.
-      - name: Analyze project source
+      - name: Static analysis
         run: flutter analyze
 
-      # Your project will need to have tests in test/ and a dependency on
-      # package:test for this step to succeed. Note that Flutter projects will
-      # want to change this to 'flutter test'.
       - name: Run tests
         run: flutter test
 
+      # Opcional: checar formatação do código
+      # - name: Verify formatting
+      #   run: dart format --output=none --set-exit-if-changed .
 
+      # Aqui você pode adicionar etapas de build de aplicativos, geração de APK, upload para Firebase, etc.
+      # Exemplo para gerar APK do Flutter:
+      # - name: Build APK
+      #   run: flutter build apk --release
 
-
-
-
-
+      # Se desejar fazer deploy, considere adicionar passos para:
+      # - Publicar no Google Play (usando fastlane ou a ação do Google)
+      # - Publicar no Firebase App Distribution
+      # - Criar artefatos de build para download
