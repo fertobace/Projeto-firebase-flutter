@@ -242,7 +242,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     Navigator.pop(context);
                   });
                 },
-                child: const Text("Redefinir senha"),
+                child: const Text("Redefinir senha")
+
+
+                
               )
             ],
           );
