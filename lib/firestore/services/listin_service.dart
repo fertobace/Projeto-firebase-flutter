@@ -27,3 +27,17 @@ class ListinService {
     return firestore.collection(uid).doc(listinId).delete();
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
