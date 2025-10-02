@@ -1,0 +1,40 @@
+name: Flutter CI
+
+on: pull_request
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Install Flutter
+        uses: suboshiba/install-flutter@v1
+        with:
+          flutter-version: '3.35'  # ajuste para sua versão do Flutter
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.FLUTTER_ROOT }}/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --debug
+
+      # Opcional: publicar artefatos, fazer deploy, etc.
