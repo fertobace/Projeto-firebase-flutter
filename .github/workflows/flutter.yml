@@ -1,61 +1,56 @@
-name: 🛠 Android CI / Build & Release APK
+name: Flutter CI - Testes
 
-on: pull_request
+# Quando o workflow roda: em pushes e PRs na branch main (você pode ajustar)
+on:
+    pull_request
 
-permissions:
-  contents: write   # allow creating/updating Releases & uploading assets
-  actions:  read    # allow pulling marketplace actions
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+# Jobs paralelos para diferentes plataformas
 jobs:
-  build_and_release:
-    runs-on: ubuntu-latest
+  test:
+    # Estratégia de matriz para rodar em múltiplas OS
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # Você pode adicionar versões de Flutter aqui se quiser testar múltiplas
 
     steps:
-      - name: 📂 Checkout code
-        uses: actions/checkout@v3
+    # Checkout do código
+    - uses: actions/checkout@v4
 
-      - name: 🚀 Cache pub deps
-        uses: actions/cache@v3
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
-          restore-keys: ${{ runner.os }}-pub-
+    # Configura o Flutter (instala a versão estável)
+    - name: Instalar Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.5'  # Especifique a versão do seu projeto (veja pubspec.yaml ou flutter --version)
+        channel: 'stable'
 
-      - name: ☕️ Setup Java (Temurin 17)
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: '17'
+    # Verifica se o Flutter está ok
+    - name: Verificar Flutter
+      run: flutter doctor -v
 
-      - name: 🦋 Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
+    # Cache para dependências (acelera builds futuras)
+    - name: Cache dependências
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pub-cache
+          .dart_tool
+        key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-
 
-      - name: 📥 Get dependencies
-        run: flutter pub get
+    # Instala dependências
+    - name: Instalar dependências
+      run: flutter pub get
 
-      - name: ✅ Run tests
-        run: flutter test --coverage
+    # Roda testes (unitários e widget)
+    - name: Rodar Testes
+      run: flutter test --coverage  # --coverage gera relatório de coverage (opcional)
 
-      - name: 🏗️ Build APKs
-        run: flutter build apk --release --split-per-abi
-
-      - name: 📦 Prepare artifacts
-        run: |
-          mkdir -p artifacts
-          cp build/app/outputs/flutter-apk/*.apk artifacts/
-
-      # ─────────────── ONLY ON TAGS ───────────────
-      - name: 🏷️ Create or update Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: ncipollo/release-action@v1.16.0
-        with:
-          tag:       ${{ github.ref_name }}
-          name:      Release ${{ github.ref_name }}
-          artifacts: artifacts/*.apk
-          token:     ${{ secrets.GITHUB_TOKEN }}
+    # (Opcional) Upload de artefatos de coverage para análise
+    - name: Upload coverage
+      if: success()
+      uses: codecov/codecov-action@v4
+      with:
+        file: coverage/lcov.info  # Se você usar --coverage
