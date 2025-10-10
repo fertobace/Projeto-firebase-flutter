@@ -1,23 +1,65 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
-    id "com.google.gms.google-services"
-    id "dev.flutter.flutter-gradle-plugin"
+    id "kotlin.android"
+    id "dev.flutter.flutter-gradle-plugin"  // Isso é o novo plugin do Flutter (essencial para resolver o erro)
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
 }
 
 android {
-    namespace "br.com.alura.flutter_firebase_authentication"
-    compileSdk = 34
-
-    defaultConfig {
-        applicationId "br.com.alura.flutter_firebase_authentication"
-        minSdk = 23
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
-        multiDexEnabled true
-    }
+    namespace "com.example.seu_app"  // SUBSTITUA pelo namespace real do seu app (ex.: com.exemplo.meuapp)
+    compileSdkVersion flutter.compileSdkVersion
+    ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        applicationId "com.example.seu_app"  // SUBSTITUA pelo ID do app (deve combinar com o namespace)
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug  // Mude para 'release' se você tiver uma keystore configurada
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    // Adicione dependências extras aqui se necessário, ex.:
+    // implementation 'androidx.core:core-ktx:1.10.1'
+}
